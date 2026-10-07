@@ -37,6 +37,29 @@ Referências: [Blueprints](https://render.com/docs/infrastructure-as-code),
 
 ## Protocolo
 
+### Lobby
+
+`welcome` inclui `lobby_version: 1`. Salas aceitam até quatro participantes.
+
+| Mensagem | Comportamento |
+| --- | --- |
+| `{"type":"lobby_list"}` | Retorna `rooms_list` com salas não iniciadas |
+| `{"type":"room_create","name":"Yan"}` | Cria sala e envia `room_state` |
+| `{"type":"room_join","name":"Amigo","code":"ABC123"}` | Entra e notifica participantes |
+| `{"type":"room_ready","ready":true}` | Atualiza estado pronto |
+| `{"type":"game_start"}` | Anfitrião inicia se todos prontos; envia `game_started` |
+| `{"type":"room_leave"}` | Sai e recebe `room_left`; notifica os demais |
+
+`room_state` e `game_started` incluem `room` com `code`, `host_id`,
+`capacity`, `started` e `players` (`id`, `name`, `ready`).
+Nomes têm entre 1 e 24 caracteres. O servidor verifica capacidade,
+participação e permissão de início. Ao desconectar, o jogador sai da sala;
+o próximo participante assume como anfitrião. Salas vazias são removidas.
+Notificações de lobby ficam restritas aos membros da sala.
+O início da partida é um evento; este servidor ainda não sincroniza movimento.
+
+### Mensagens básicas
+
 Use objetos JSON em frames de texto, com limite de 64 KiB.
 
 | Envio | Resposta |

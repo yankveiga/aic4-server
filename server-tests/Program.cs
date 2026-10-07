@@ -3,6 +3,8 @@ using System.Text;
 using System.Text.Json.Nodes;
 using AicIv.Server;
 
+await LobbyTests.RunAsync();
+
 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 var token = timeout.Token;
 await using var app = ServerApp.Create("http://127.0.0.1:0");

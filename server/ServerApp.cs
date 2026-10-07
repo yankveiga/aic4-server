@@ -14,6 +14,8 @@ public static class ServerApp
         builder.WebHost.UseUrls(url);
         var app = builder.Build();
         var clients = new ConcurrentDictionary<string, ClientConnection>();
+        var lobby = new LobbyService((id, message, token) =>
+            clients.TryGetValue(id, out var peer) ? peer.SendAsync(message, token) : Task.CompletedTask);
         app.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromSeconds(30) });
         app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
         app.Map("/", async context =>
@@ -33,7 +35,7 @@ public static class ServerApp
             try
             {
                 // O welcome deve chegar antes de qualquer broadcast.
-                await client.SendAsync(new { type = "welcome", client_id = client.Id }, token);
+                await client.SendAsync(new { type = "welcome", client_id = client.Id, lobby_version = 1 }, token);
                 clients[client.Id] = client;
                 var buffer = new byte[4096];
                 while (socket.State == WebSocketState.Open && !token.IsCancellationRequested)
@@ -82,6 +84,14 @@ public static class ServerApp
                         object? data = root.TryGetProperty("data", out var payload) ? payload : null;
                         switch (type)
                         {
+                            case "lobby_list":
+                            case "room_create":
+                            case "room_join":
+                            case "room_leave":
+                            case "room_ready":
+                            case "game_start":
+                                await lobby.HandleAsync(client.Id, type, root, token);
+                                break;
                             case "ping":
                                 await client.SendAsync(new { type = "pong", timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() }, token);
                                 break;
@@ -108,6 +118,7 @@ public static class ServerApp
             {
                 clients.TryRemove(client.Id, out _);
                 socket.Abort();
+                await lobby.DisconnectAsync(client.Id);
             }
         });
         return app;
