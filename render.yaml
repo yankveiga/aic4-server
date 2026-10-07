@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: aic-iv-websocket
+    runtime: docker
+    plan: free
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0

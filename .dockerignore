@@ -1,0 +1,6 @@
+**
+!server/
+!server/**
+server/bin/
+server/obj/
+server/node_modules/
