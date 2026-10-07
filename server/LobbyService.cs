@@ -9,7 +9,7 @@ internal sealed class LobbyService(Func<string, object, CancellationToken, Task>
     private readonly SemaphoreSlim gate = new(1, 1);
     private readonly Dictionary<string, Room> rooms = new();
     private readonly Dictionary<string, string> memberships = new();
-    private const int Capacity = 4;
+    private const int Capacity = 2;
 
     public async Task HandleAsync(string id, string type, JsonElement message, CancellationToken token)
     {

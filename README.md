@@ -39,7 +39,7 @@ Referências: [Blueprints](https://render.com/docs/infrastructure-as-code),
 
 ### Lobby
 
-`welcome` inclui `lobby_version: 1`. Salas aceitam até quatro participantes.
+`welcome` inclui `lobby_version: 1`. Salas aceitam até dois participantes.
 
 | Mensagem | Comportamento |
 | --- | --- |

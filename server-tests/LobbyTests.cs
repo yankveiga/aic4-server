@@ -54,11 +54,14 @@ internal static class LobbyTests
             var first = (await Read(a, "room_state"))["room"]!;
             var code = first["code"]!.GetValue<string>();
             Check(first["players"]!.AsArray().Count == 1, "criação de sala");
+            Check(first["capacity"]!.GetValue<int>() == 2, "capacidade de dois jogadores");
             await Send(b, new { type = "room_join", code = "ZZZZZZ", name = "B" });
             await Read(b, "error");
             await Send(b, new { type = "room_join", code = code.ToLowerInvariant(), name = "B" });
             Check((await Read(a, "room_state"))["room"]!["players"]!.AsArray().Count == 2, "entrada notifica anfitrião");
             var joined = (await Read(b, "room_state"))["room"]!;
+            await Send(d, new { type = "room_join", code, name = "Terceiro" });
+            Check((await Read(d, "error"))["message"]!.GetValue<string>() == "A sala está cheia.", "terceiro jogador rejeitado");
             var bId = joined["players"]![1]!["id"]!.GetValue<string>();
             await Send(c, new { type = "room_create", name = "Outra equipe" });
             var otherCode = (await Read(c, "room_state"))["room"]!["code"]!.GetValue<string>();
@@ -94,13 +97,13 @@ internal static class LobbyTests
             var promoted = (await Read(a, "room_state"))["room"]!;
             Check(promoted["players"]!.AsArray().Count == 1, "limpeza ao desconectar");
             Check(promoted["host_id"]!.GetValue<string>() == promoted["players"]![0]!["id"]!.GetValue<string>(), "promoção após desconexão");
-            foreach (var peer in new[] { b, d })
+            foreach (var peer in new[] { b })
             {
                 await Send(peer, new { type = "room_join", code = otherCode, name = "Peer" });
                 await Read(peer, "room_state");
             }
             var e = await Connect();
-            await Send(e, new { type = "room_join", code = otherCode, name = "E" }); await Read(e, "room_state");
+            await Send(e, new { type = "room_join", code = otherCode, name = "E" }); await Read(e, "error");
             var f = await Connect();
             await Send(f, new { type = "room_join", code = otherCode, name = "F" }); await Read(f, "error");
             await Send(f, new { type = "room_create", name = " " }); await Read(f, "error");
